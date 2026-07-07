@@ -25,7 +25,8 @@ namespace IO::Network::Unifi
 {
 void Request::submit()
 {
-	auto err = getDevice().execute(*this);
+	// auto err = getDevice().execute(*this);
+	auto err = Error::not_impl;
 	if(err < 0) {
 		debug_e("Request failed, %s", Error::toString(err).c_str());
 	}
@@ -52,7 +53,7 @@ void Request::getJson(JsonObject json) const
 	}
 
 	auto& dev = const_cast<Request*>(this)->getDevice();
-	dev.getRequestJson(*this, json);
+	// dev.getRequestJson(*this, json);
 }
 
 } // namespace IO::Network::Unifi

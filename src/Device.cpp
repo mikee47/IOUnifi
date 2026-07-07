@@ -23,26 +23,45 @@
 
 namespace IO::Network::Unifi
 {
+const Device::Factory Device::factory;
+
+ErrorCode Device::init(const Config& config)
+{
+	auto err = IO::Device::init(config.base);
+	if(err) {
+		return err;
+	}
+
+	return Error::success;
+}
+
+ErrorCode Device::init(JsonObjectConst config)
+{
+	Config cfg{};
+	// parseJson(config, cfg);
+	return init(cfg);
+}
+
 IO::Request* Device::createRequest()
 {
 	return new Request(*this);
 }
 
-void Device::getRequestJson(const Request& request, JsonObject json) const
-{
-	auto n = maxNodes();
-	if(n <= 1 || request.getCommand() != Command::query) {
-		json[FS_value] = request.getValue();
-		json[FS_node] = request.getNode().id;
-		return;
-	}
+// void Device::getRequestJson(const Request& request, JsonObject json) const
+// {
+// 	auto n = maxNodes();
+// 	if(n <= 1 || request.getCommand() != Command::query) {
+// 		json[FS_value] = request.getValue();
+// 		json[FS_node] = request.getNode().id;
+// 		return;
+// 	}
 
-	auto nodes = json.createNestedArray(FS_nodes);
-	auto values = json.createNestedArray(FS_value);
-	for(auto i = nodeIdMin(); i <= nodeIdMax(); ++i) {
-		nodes.add(i);
-		values.add(getNodeValue({i}));
-	}
-}
+// 	auto nodes = json.createNestedArray(FS_nodes);
+// 	auto values = json.createNestedArray(FS_value);
+// 	for(auto i = nodeIdMin(); i <= nodeIdMax(); ++i) {
+// 		nodes.add(i);
+// 		values.add(getNodeValue({i}));
+// 	}
+// }
 
 } // namespace IO::Network::Unifi
