@@ -23,6 +23,12 @@ namespace IO::Network::Unifi
 {
 DEFINE_FSTR(CONTROLLER_CLASSNAME, "unifi")
 
+ErrorCode Controller::init(JsonObjectConst config)
+{
+	ipaddr = config["ip"].as<const char*>();
+	return Error::success;
+}
+
 void Controller::handleEvent(IO::Request* request, Event event)
 {
 	IO::Controller::handleEvent(request, event);

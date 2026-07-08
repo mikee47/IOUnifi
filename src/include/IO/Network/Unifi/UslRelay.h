@@ -1,5 +1,5 @@
 /**
- * Unifi/Device.cpp
+ * Custom/Device.h
  *
  * Copyright 2026 mikee47 <mike@sillyhouse.net>
  *
@@ -17,40 +17,33 @@
  *
  ****/
 
-#include "include/IO/Network/Unifi/Device.h"
-#include "include/IO/Network/Unifi/Request.h"
-#include <IO/Strings.h>
+#pragma once
+
+#include "Device.h"
 
 namespace IO::Network::Unifi
 {
-ErrorCode Device::init(const Config& config)
+class UslRelay : public Device
 {
-	auto err = IO::Device::init(config.base);
-	if(err) {
-		return err;
+public:
+	class Factory : public FactoryTemplate<UslRelay>
+	{
+	public:
+		const FlashString& deviceClass() const override
+		{
+			DEFINE_FSTR_LOCAL(DEVICE_CLASSNAME, "usl-relay")
+			return DEVICE_CLASSNAME;
+		}
+	};
+
+	static const Factory factory;
+
+	using Device::Device;
+
+	virtual int getNodeValue(IO::DevNode) const
+	{
+		return 0;
 	}
-
-	unifi_id = config.unifi_id;
-
-	return Error::success;
-}
-
-ErrorCode Device::init(JsonObjectConst config)
-{
-	Config cfg{};
-	parseJson(config, cfg);
-	return init(cfg);
-}
-
-void Device::parseJson(JsonObjectConst json, Config& cfg)
-{
-	IO::Device::parseJson(json, cfg.base);
-	cfg.unifi_id = json["id"].as<const char*>();
-}
-
-IO::Request* Device::createRequest()
-{
-	return new Request(*this);
-}
+};
 
 } // namespace IO::Network::Unifi

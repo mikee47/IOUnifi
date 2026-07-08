@@ -45,7 +45,20 @@ public:
 		return CONTROLLER_CLASSNAME;
 	}
 
+	ErrorCode init(JsonObjectConst config) override;
+
 	void handleEvent(IO::Request* request, Event event) override;
+
+	Url getUrl() const
+	{
+		Url url;
+		url.Scheme = URI_SCHEME_HTTP_SECURE;
+		url.Host = ipaddr.toString();
+		return url;
+	}
+
+private:
+	IpAddress ipaddr;
 };
 
 } // namespace IO::Network::Unifi

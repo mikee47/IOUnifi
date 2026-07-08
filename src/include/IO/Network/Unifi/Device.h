@@ -31,30 +31,23 @@ class Device : public IO::Device
 	friend Request;
 
 public:
-	class Factory : public IO::Device::Factory
+	template <class DeviceClass> class FactoryTemplate : public IO::Device::Factory
 	{
 	public:
 		IO::Device* createDevice(IO::Controller& controller, const char* id) const override
 		{
-			return new Device(static_cast<Controller&>(controller), id);
+			return new DeviceClass(static_cast<Controller&>(controller), id);
 		}
 
 		const FlashString& controllerClass() const override
 		{
 			return CONTROLLER_CLASSNAME;
 		}
-
-		const FlashString& deviceClass() const override
-		{
-			DEFINE_FSTR_LOCAL(DEVICE_CLASSNAME, "unifi")
-			return DEVICE_CLASSNAME;
-		}
 	};
-
-	static const Factory factory;
 
 	struct Config {
 		IO::Device::Config base;
+		String unifi_id;
 	};
 
 	ErrorCode init(const Config& config);
@@ -77,12 +70,10 @@ public:
 	}
 
 protected:
-	// virtual ErrorCode execute(Request& request) = 0;
-	// virtual void getRequestJson(const Request& request, JsonObject json) const;
+	void parseJson(JsonObjectConst json, Config& cfg);
 
-private:
-	uint32_t param1{0};
-	uint32_t param2{0};
+protected:
+	CString unifi_id;
 };
 
 } // namespace IO::Network::Unifi

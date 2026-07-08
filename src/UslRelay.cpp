@@ -17,40 +17,12 @@
  *
  ****/
 
-#include "include/IO/Network/Unifi/Device.h"
+#include "include/IO/Network/Unifi/UslRelay.h"
 #include "include/IO/Network/Unifi/Request.h"
 #include <IO/Strings.h>
 
 namespace IO::Network::Unifi
 {
-ErrorCode Device::init(const Config& config)
-{
-	auto err = IO::Device::init(config.base);
-	if(err) {
-		return err;
-	}
-
-	unifi_id = config.unifi_id;
-
-	return Error::success;
-}
-
-ErrorCode Device::init(JsonObjectConst config)
-{
-	Config cfg{};
-	parseJson(config, cfg);
-	return init(cfg);
-}
-
-void Device::parseJson(JsonObjectConst json, Config& cfg)
-{
-	IO::Device::parseJson(json, cfg.base);
-	cfg.unifi_id = json["id"].as<const char*>();
-}
-
-IO::Request* Device::createRequest()
-{
-	return new Request(*this);
-}
+const UslRelay::Factory UslRelay::factory;
 
 } // namespace IO::Network::Unifi
