@@ -28,6 +28,8 @@ namespace IO::Network::Unifi
 {
 class Request : public IO::Request
 {
+	friend class Device;
+
 public:
 	Request(IO::Device& device) : IO::Request(device)
 	{
@@ -64,10 +66,8 @@ public:
 		return true;
 	}
 
-	void submit() override;
-
-private:
-	DevNode node;
+protected:
+	DevNode node; ///< USL relay has two outputs
 	int value{0};
 };
 

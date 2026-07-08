@@ -1,4 +1,7 @@
 COMPONENT_INCDIRS := src/include
 COMPONENT_SRCDIRS := src
 COMPONENT_DOXYGEN_INPUT := src/include
-COMPONENT_DEPENDS := IOControl
+COMPONENT_DEPENDS := \
+	IOControl \
+	Network
+ENABLE_SSL := Bearssl

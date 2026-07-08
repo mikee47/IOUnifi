@@ -49,16 +49,12 @@ public:
 
 	void handleEvent(IO::Request* request, Event event) override;
 
-	Url getUrl() const
-	{
-		Url url;
-		url.Scheme = URI_SCHEME_HTTP_SECURE;
-		url.Host = ipaddr.toString();
-		return url;
-	}
-
 private:
-	IpAddress ipaddr;
+	ErrorCode submitRequest(Request& request);
+
+	IpAddress ipAddr;
+	CString apiKey;
+	SimpleTimer timer;
 };
 
 } // namespace IO::Network::Unifi

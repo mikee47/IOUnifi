@@ -64,10 +64,9 @@ public:
 
 	IO::Request* createRequest() override;
 
-	virtual int getNodeValue(IO::DevNode) const
-	{
-		return 0;
-	}
+	virtual String getPath(const Request& request) const = 0;
+
+	virtual String getBody(const Request& request) const = 0;
 
 protected:
 	void parseJson(JsonObjectConst json, Config& cfg);

@@ -1,5 +1,5 @@
 /**
- * Unifi/Device.cpp
+ * Unifi/UslRelay.cpp
  *
  * Copyright 2026 mikee47 <mike@sillyhouse.net>
  *
@@ -24,5 +24,63 @@
 namespace IO::Network::Unifi
 {
 const UslRelay::Factory UslRelay::factory;
+
+String UslRelay::getPath(const Request& request) const
+{
+	String path;
+	path += F("/proxy/protect/integration/v1/relays/");
+	path += unifi_id.c_str();
+
+	switch(request.getCommand()) {
+	case Command::undefined: // Undefined or invalid
+		return nullptr;
+	case Command::query: // Query node states
+		break;
+	case Command::off: // Turn node off or set to minimum
+	case Command::on:  // Turn node on or set to maximum
+		path += F("/outputs/");
+		path += request.getNode().id;
+		path += F("/activate");
+		break;
+	case Command::toggle:	// Toggle node(s) between on and off
+	case Command::latch:	 // Relay nodes
+	case Command::momentary: // Relay nodes
+	case Command::delay:	 // Relay nodes
+	case Command::set:		 // Set value
+	case Command::adjust:	// Adjust value
+	case Command::update:	// Perform update cycle (e.g. DMX512)
+		return nullptr;
+	};
+
+	return path;
+}
+
+String UslRelay::getBody(const Request& request) const
+{
+	String s;
+	s += "{\"state\":\"";
+
+	switch(request.getCommand()) {
+	case Command::undefined: // Undefined or invalid
+	case Command::query:	 // Query node states
+		return nullptr;
+	case Command::off: // Turn node off or set to minimum
+		s += "off";
+		break;
+	case Command::on: // Turn node on or set to maximum
+		s += "on";
+		break;
+	case Command::toggle:	// Toggle node(s) between on and off
+	case Command::latch:	 // Relay nodes
+	case Command::momentary: // Relay nodes
+	case Command::delay:	 // Relay nodes
+	case Command::set:		 // Set value
+	case Command::adjust:	// Adjust value
+	case Command::update:	// Perform update cycle (e.g. DMX512)
+		return nullptr;
+	};
+	s += "\",\"pulseDuration\":0}";
+	return s;
+}
 
 } // namespace IO::Network::Unifi

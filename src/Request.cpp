@@ -23,25 +23,9 @@
 
 namespace IO::Network::Unifi
 {
-void Request::submit()
-{
-	// auto err = getDevice().execute(*this);
-	auto err = Error::not_impl;
-	if(err < 0) {
-		debug_e("Request failed, %s", Error::toString(err).c_str());
-	}
-	complete(err);
-}
-
 ErrorCode Request::parseJson(JsonObjectConst json)
 {
-	auto err = IO::Request::parseJson(json);
-	if(err) {
-		return err;
-	}
-	value = json[FS_value];
-
-	return Error::success;
+	return IO::Request::parseJson(json);
 }
 
 void Request::getJson(JsonObject json) const

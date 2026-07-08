@@ -1,5 +1,5 @@
 /**
- * Custom/Device.h
+ * Custom/UslRelay.h
  *
  * Copyright 2026 mikee47 <mike@sillyhouse.net>
  *
@@ -26,6 +26,8 @@ namespace IO::Network::Unifi
 class UslRelay : public Device
 {
 public:
+	static constexpr unsigned outputCount{2};
+
 	class Factory : public FactoryTemplate<UslRelay>
 	{
 	public:
@@ -40,10 +42,31 @@ public:
 
 	using Device::Device;
 
-	virtual int getNodeValue(IO::DevNode) const
+	uint16_t maxNodes() const override
 	{
-		return 0;
+		return outputCount;
 	}
+
+	DevNode::States getNodeStates(DevNode node) const override
+	{
+		if(node == DevNode_ALL) {
+			DevNode::States res;
+			for(auto state : states) {
+				res |= state;
+			}
+			return res;
+		}
+		if(node.id < outputCount) {
+			return states[node.id];
+		}
+		return DevNode::State::unknown;
+	}
+
+	String getPath(const Request& request) const override;
+	String getBody(const Request& request) const override;
+
+private:
+	DevNode::State states[outputCount]{};
 };
 
 } // namespace IO::Network::Unifi
