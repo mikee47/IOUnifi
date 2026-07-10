@@ -68,6 +68,10 @@ public:
 
 	virtual String getBody(const Request& request) const = 0;
 
+	virtual void parseResponse(String& body, const Request& request) = 0;
+
+	virtual void getRequestJson(const Request& request, JsonObject json) const = 0;
+
 protected:
 	void parseJson(JsonObjectConst json, Config& cfg);
 

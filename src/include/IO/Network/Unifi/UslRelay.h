@@ -64,6 +64,8 @@ public:
 
 	String getPath(const Request& request) const override;
 	String getBody(const Request& request) const override;
+	void parseResponse(String& body, const Request& request) override;
+	void getRequestJson(const Request& request, JsonObject json) const override;
 
 private:
 	DevNode::State states[outputCount]{};

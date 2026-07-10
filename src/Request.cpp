@@ -37,7 +37,7 @@ void Request::getJson(JsonObject json) const
 	}
 
 	auto& dev = const_cast<Request*>(this)->getDevice();
-	// dev.getRequestJson(*this, json);
+	dev.getRequestJson(*this, json);
 }
 
 } // namespace IO::Network::Unifi

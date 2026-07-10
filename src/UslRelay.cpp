@@ -32,23 +32,23 @@ String UslRelay::getPath(const Request& request) const
 	path += unifi_id.c_str();
 
 	switch(request.getCommand()) {
-	case Command::undefined: // Undefined or invalid
+	case Command::undefined:
 		return nullptr;
-	case Command::query: // Query node states
+	case Command::query:
 		break;
-	case Command::off: // Turn node off or set to minimum
-	case Command::on:  // Turn node on or set to maximum
+	case Command::off:
+	case Command::on:
 		path += F("/outputs/");
 		path += request.getNode().id;
 		path += F("/activate");
 		break;
-	case Command::toggle:	// Toggle node(s) between on and off
-	case Command::latch:	 // Relay nodes
-	case Command::momentary: // Relay nodes
-	case Command::delay:	 // Relay nodes
-	case Command::set:		 // Set value
-	case Command::adjust:	// Adjust value
-	case Command::update:	// Perform update cycle (e.g. DMX512)
+	case Command::toggle:
+	case Command::latch:
+	case Command::momentary:
+	case Command::delay:
+	case Command::set:
+	case Command::adjust:
+	case Command::update:
 		return nullptr;
 	};
 
@@ -61,26 +61,85 @@ String UslRelay::getBody(const Request& request) const
 	s += "{\"state\":\"";
 
 	switch(request.getCommand()) {
-	case Command::undefined: // Undefined or invalid
-	case Command::query:	 // Query node states
+	case Command::undefined:
+	case Command::query:
 		return nullptr;
-	case Command::off: // Turn node off or set to minimum
+	case Command::off:
 		s += "off";
 		break;
-	case Command::on: // Turn node on or set to maximum
+	case Command::on:
 		s += "on";
 		break;
-	case Command::toggle:	// Toggle node(s) between on and off
-	case Command::latch:	 // Relay nodes
-	case Command::momentary: // Relay nodes
-	case Command::delay:	 // Relay nodes
-	case Command::set:		 // Set value
-	case Command::adjust:	// Adjust value
-	case Command::update:	// Perform update cycle (e.g. DMX512)
+	case Command::toggle:
+	case Command::latch:
+	case Command::momentary:
+	case Command::delay:
+	case Command::set:
+	case Command::adjust:
+	case Command::update:
 		return nullptr;
 	};
 	s += "\",\"pulseDuration\":0}";
 	return s;
+}
+
+void UslRelay::parseResponse(String& body, const Request& request)
+{
+	switch(request.getCommand()) {
+	case Command::undefined:
+	case Command::query: {
+		DynamicJsonDocument doc(1024);
+		Json::deserialize(doc, body);
+		auto json = doc.as<JsonObject>();
+		for(JsonObject output : json["outputs"].as<JsonArray>()) {
+			unsigned id = output["id"];
+			if(id < outputCount) {
+				String state = output["state"].as<const char*>();
+				if(state == "on") {
+					states[id] = DevNode::State::on;
+				} else if(state == "off") {
+					states[id] = DevNode::State::off;
+				} else {
+					states[id] = DevNode::State::unknown;
+				}
+			}
+		}
+		break;
+	}
+	case Command::off:
+		states[request.getNode().id] = DevNode::State::off;
+		break;
+	case Command::on:
+		states[request.getNode().id] = DevNode::State::on;
+		break;
+	case Command::toggle:
+	case Command::latch:
+	case Command::momentary:
+	case Command::delay:
+	case Command::set:
+	case Command::adjust:
+	case Command::update:
+		break;
+	};
+}
+
+void UslRelay::getRequestJson(const Request& request, JsonObject json) const
+{
+	for(unsigned i = 0; i < outputCount; ++i) {
+		String tag = F("output") + i;
+		switch(states[i]) {
+		case DevNode::State::off:
+			json[tag] = "off";
+			break;
+		case DevNode::State::on:
+			json[tag] = "on";
+			break;
+		case DevNode::State::unknown:
+		default:
+			json[tag] = "unknown";
+			break;
+		}
+	}
 }
 
 } // namespace IO::Network::Unifi

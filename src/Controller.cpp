@@ -34,7 +34,7 @@ void sslRequestInit(Ssl::Session& session, HttpRequest&)
 	session.options.verifyLater = true;
 }
 
-constexpr unsigned requestTimeout = 2000;
+constexpr unsigned requestTimeout = 10000;
 
 ErrorCode Controller::init(JsonObjectConst config)
 {
@@ -54,16 +54,6 @@ void Controller::handleEvent(IO::Request* request, Event event)
 			request->complete(err);
 			return;
 		}
-
-		// Put a timeout on the overall transaction
-		timer.initializeMs<requestTimeout>(
-			[](void* param) {
-				auto request = static_cast<Request*>(param);
-				request->handleEvent(Event::Timeout);
-			},
-			request);
-		timer.startOnce();
-
 		break;
 	}
 
@@ -108,14 +98,18 @@ ErrorCode Controller::submitRequest(Request& request)
 		String body = conn.getResponse()->getBody();
 		debug_i("UNIFI request complete %p, success %d: \r\n%s", &request, success, body.c_str());
 
-		// TODO: For query we need to parse received response (but only on success)
-		// device.parserResponse(body, request);
+		if(success) {
+			request.getDevice().parseResponse(body, request);
+			request.complete(Error::success);
+		} else {
+			request.complete(Error::access_denied);
+		}
 
-		request.complete(Error::success);
 		return 0;
 	});
 	String body = device.getBody(request);
 	if(body) {
+		req->headers[HTTP_HEADER_CONTENT_TYPE] = toString(MIME_JSON);
 		req->setBody(body);
 		req->method = HTTP_POST;
 	}
@@ -124,6 +118,15 @@ ErrorCode Controller::submitRequest(Request& request)
 	if(!httpClient.send(req)) {
 		return Error::busy;
 	}
+
+	// Put a timeout on the overall transaction
+	timer.initializeMs<requestTimeout>(
+		[](void* param) {
+			auto request = static_cast<Request*>(param);
+			request->handleEvent(Event::Timeout);
+		},
+		&request);
+	timer.startOnce();
 
 	return Error::success;
 }
