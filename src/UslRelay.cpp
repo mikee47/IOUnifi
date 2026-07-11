@@ -19,11 +19,32 @@
 
 #include "include/IO/Network/Unifi/UslRelay.h"
 #include "include/IO/Network/Unifi/Request.h"
-#include <IO/Strings.h>
 
 namespace IO::Network::Unifi
 {
 const UslRelay::Factory UslRelay::factory;
+
+bool UslRelay::isRequestRequired(const Request& request) const
+{
+	switch(request.getCommand()) {
+	case Command::off:
+		return states[request.getNode().id] != DevNode::State::off;
+	case Command::on:
+		return states[request.getNode().id] != DevNode::State::on;
+	case Command::undefined:
+	case Command::query:
+	case Command::toggle:
+	case Command::latch:
+	case Command::momentary:
+	case Command::delay:
+	case Command::set:
+	case Command::adjust:
+	case Command::update:
+		break;
+	};
+
+	return true;
+}
 
 String UslRelay::getPath(const Request& request) const
 {
@@ -32,8 +53,6 @@ String UslRelay::getPath(const Request& request) const
 	path += unifi_id.c_str();
 
 	switch(request.getCommand()) {
-	case Command::undefined:
-		return nullptr;
 	case Command::query:
 		break;
 	case Command::off:
@@ -42,6 +61,7 @@ String UslRelay::getPath(const Request& request) const
 		path += request.getNode().id;
 		path += F("/activate");
 		break;
+	case Command::undefined:
 	case Command::toggle:
 	case Command::latch:
 	case Command::momentary:
@@ -58,18 +78,16 @@ String UslRelay::getPath(const Request& request) const
 String UslRelay::getBody(const Request& request) const
 {
 	String s;
-	s += "{\"state\":\"";
 
 	switch(request.getCommand()) {
-	case Command::undefined:
-	case Command::query:
-		return nullptr;
 	case Command::off:
-		s += "off";
+		s = "off";
 		break;
 	case Command::on:
-		s += "on";
+		s = "on";
 		break;
+	case Command::undefined:
+	case Command::query:
 	case Command::toggle:
 	case Command::latch:
 	case Command::momentary:
@@ -79,8 +97,8 @@ String UslRelay::getBody(const Request& request) const
 	case Command::update:
 		return nullptr;
 	};
-	s += "\",\"pulseDuration\":0}";
-	return s;
+
+	return F("{\"state\":\"") + s + F("\",\"pulseDuration\":0}");
 }
 
 void UslRelay::parseResponse(String& body, const Request& request)

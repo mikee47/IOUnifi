@@ -64,8 +64,20 @@ public:
 
 	IO::Request* createRequest() override;
 
+	/**
+	 * @brief Request may be redundant if it doesn't result in a change of device state
+	 */
+	virtual bool isRequestRequired(const Request& request) const = 0;
+
+	/**
+	 * @brief Get URI path for HTTP request
+	 */
 	virtual String getPath(const Request& request) const = 0;
 
+	/**
+	 * @brief Get body/content of POST request
+	 * @retval String Return nullptr for GET request
+	 */
 	virtual String getBody(const Request& request) const = 0;
 
 	virtual void parseResponse(String& body, const Request& request) = 0;

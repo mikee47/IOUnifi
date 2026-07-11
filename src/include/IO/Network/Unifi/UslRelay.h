@@ -62,6 +62,7 @@ public:
 		return DevNode::State::unknown;
 	}
 
+	bool isRequestRequired(const Request& request) const override;
 	String getPath(const Request& request) const override;
 	String getBody(const Request& request) const override;
 	void parseResponse(String& body, const Request& request) override;

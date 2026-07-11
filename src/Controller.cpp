@@ -77,6 +77,11 @@ ErrorCode Controller::submitRequest(Request& request)
 {
 	auto& device = request.getDevice();
 
+	if(!device.isRequestRequired(request)) {
+		request.complete(Error::success);
+		return Error::success;
+	}
+
 	Url url;
 	url.Scheme = URI_SCHEME_HTTP_SECURE;
 	url.Host = toString(ipAddr);
@@ -114,10 +119,7 @@ ErrorCode Controller::submitRequest(Request& request)
 		req->method = HTTP_POST;
 	}
 
-	// Second: We have to send that request using our httpClient
-	if(!httpClient.send(req)) {
-		return Error::busy;
-	}
+	httpClient.send(req);
 
 	// Put a timeout on the overall transaction
 	timer.initializeMs<requestTimeout>(
