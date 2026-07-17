@@ -32,6 +32,11 @@ void Request::getJson(JsonObject json) const
 {
 	IO::Request::getJson(json);
 
+	if(errorString) {
+		setError(json, Error::access_denied, errorString.c_str());
+		return;
+	}
+
 	if(error()) {
 		return;
 	}

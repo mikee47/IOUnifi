@@ -66,6 +66,9 @@ public:
 		return true;
 	}
 
+public:
+	CString errorString;
+
 protected:
 	DevNode node; ///< USL relay has two outputs
 	int value{0};

@@ -100,16 +100,8 @@ ErrorCode Controller::submitRequest(Request& request)
 	req->onSslInit(sslRequestInit);
 	req->setResponseStream(new LimitedMemoryStream(1024));
 	req->onRequestComplete([&request](HttpConnection& conn, bool success) -> int {
-		String body = conn.getResponse()->getBody();
-		debug_i("UNIFI request complete %p, success %d: \r\n%s", &request, success, body.c_str());
-
-		if(success) {
-			request.getDevice().parseResponse(body, request);
-			request.complete(Error::success);
-		} else {
-			request.complete(Error::access_denied);
-		}
-
+		auto err = request.getDevice().parseResponse(request, *conn.getResponse());
+		request.complete(err);
 		return 0;
 	});
 	String body = device.getBody(request);

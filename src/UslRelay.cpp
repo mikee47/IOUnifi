@@ -101,14 +101,30 @@ String UslRelay::getBody(const Request& request) const
 	return F("{\"state\":\"") + s + F("\",\"pulseDuration\":0}");
 }
 
-void UslRelay::parseResponse(String& body, const Request& request)
+ErrorCode UslRelay::parseResponse(Request& request, const HttpResponse& response)
 {
-	switch(request.getCommand()) {
+	DynamicJsonDocument doc(1024);
+	Json::deserialize(doc, response.stream);
+	auto json = doc.as<JsonObject>();
+
+	debug_i("%s", Json::serialize(doc).c_str());
+
+	if(auto state = json["state"]) {
+		if(state != F("CONNECTED")) {
+			request.errorString = F("State: ") + state.as<const char*>();
+			return IO::Error::offline;
+		}
+	}
+
+	if(auto err = json["error"]) {
+		request.errorString = err.as<const char*>();
+		return (json["reason"] == F("offline")) ? Error::offline : Error::access_denied;
+	}
+
+	auto cmd = request.getCommand();
+	switch(cmd) {
 	case Command::undefined:
 	case Command::query: {
-		DynamicJsonDocument doc(1024);
-		Json::deserialize(doc, body);
-		auto json = doc.as<JsonObject>();
 		for(JsonObject output : json["outputs"].as<JsonArray>()) {
 			unsigned id = output["id"];
 			if(id < outputCount) {
@@ -125,10 +141,10 @@ void UslRelay::parseResponse(String& body, const Request& request)
 		break;
 	}
 	case Command::off:
-		states[request.getNode().id] = DevNode::State::off;
-		break;
 	case Command::on:
-		states[request.getNode().id] = DevNode::State::on;
+		if(response.isSuccess()) {
+			states[request.getNode().id] = (cmd == Command::on) ? DevNode::State::on : DevNode::State::off;
+		}
 		break;
 	case Command::toggle:
 	case Command::latch:
@@ -139,6 +155,8 @@ void UslRelay::parseResponse(String& body, const Request& request)
 	case Command::update:
 		break;
 	};
+
+	return Error::success;
 }
 
 void UslRelay::getRequestJson(const Request& request, JsonObject json) const
